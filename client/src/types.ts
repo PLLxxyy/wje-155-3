@@ -90,6 +90,7 @@ export interface RideHistoryItem {
   station_name: string;
   route_name: string;
   route_number: string;
+  ride_date: string;
   created_at: string;
   is_duplicate?: boolean;
 }

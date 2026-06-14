@@ -42,13 +42,14 @@ router.post('/checkin', authMiddleware, (req: AuthRequest, res: Response): void 
       return;
     }
 
+    const today = db.prepare("SELECT date('now', 'localtime') as today").get() as { today: string };
+    const rideDate = today.today;
+
     const existingRecord = db.prepare(`
       SELECT * FROM ride_history
-      WHERE user_id = ? AND route_id = ? AND station_id = ?
-        AND date(created_at, 'localtime') = date('now', 'localtime')
-      ORDER BY created_at DESC
+      WHERE user_id = ? AND route_id = ? AND station_id = ? AND ride_date = ?
       LIMIT 1
-    `).get(userId, routeId, stationId) as RideHistory | undefined;
+    `).get(userId, routeId, stationId, rideDate) as RideHistory | undefined;
 
     if (existingRecord) {
       res.json({ ...existingRecord, is_duplicate: true });
@@ -56,9 +57,9 @@ router.post('/checkin', authMiddleware, (req: AuthRequest, res: Response): void 
     }
 
     const result = db.prepare(`
-      INSERT INTO ride_history (user_id, route_id, station_id, station_name, route_name, route_number)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(userId, routeId, stationId, station.station_name, route.name, route.route_number);
+      INSERT INTO ride_history (user_id, route_id, station_id, station_name, route_name, route_number, ride_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, routeId, stationId, station.station_name, route.name, route.route_number, rideDate);
 
     const rideRecord = db.prepare('SELECT * FROM ride_history WHERE id = ?').get(result.lastInsertRowid) as RideHistory;
 

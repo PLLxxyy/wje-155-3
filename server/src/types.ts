@@ -83,6 +83,7 @@ export interface RideHistory {
   station_name: string;
   route_name: string;
   route_number: string;
+  ride_date: string;
   created_at: string;
 }
 

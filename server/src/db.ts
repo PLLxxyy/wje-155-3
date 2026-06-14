@@ -87,17 +87,35 @@ function initDatabase(): void {
       station_name TEXT NOT NULL,
       route_name TEXT NOT NULL,
       route_number TEXT NOT NULL,
+      ride_date TEXT NOT NULL,
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (route_id) REFERENCES bus_routes(id) ON DELETE CASCADE,
-      FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE CASCADE
+      FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE CASCADE,
+      UNIQUE(user_id, route_id, station_id, ride_date)
     );
   `);
 
-  db.exec(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_ride_history_unique_daily 
-    ON ride_history(user_id, route_id, station_id, date(created_at, 'localtime'));
-  `);
+  try {
+    const columns = db.prepare("PRAGMA table_info(ride_history)").all() as { name: string }[];
+    const hasRideDate = columns.some(c => c.name === 'ride_date');
+    if (!hasRideDate) {
+      db.exec(`
+        ALTER TABLE ride_history ADD COLUMN ride_date TEXT;
+        UPDATE ride_history SET ride_date = date(created_at, 'localtime');
+      `);
+    }
+    const indexes = db.prepare("PRAGMA index_list(ride_history)").all() as { name: string }[];
+    const hasUniqueIdx = indexes.some(i => i.name === 'idx_ride_history_unique_daily');
+    if (!hasUniqueIdx) {
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_ride_history_unique_daily
+        ON ride_history(user_id, route_id, station_id, ride_date);
+      `);
+    }
+  } catch {
+    // ignore migration errors
+  }
 
   // Seed data
   const existingRoutes = db.prepare('SELECT COUNT(*) as count FROM bus_routes').get() as { count: number };
