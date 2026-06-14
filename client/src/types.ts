@@ -91,6 +91,7 @@ export interface RideHistoryItem {
   route_name: string;
   route_number: string;
   created_at: string;
+  is_duplicate?: boolean;
 }
 
 export interface AuthResponse {

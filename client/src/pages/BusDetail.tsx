@@ -139,8 +139,12 @@ export default function BusDetail() {
     setCheckinSuccess('');
     setError('');
     try {
-      await checkin(routeId, stationId);
-      setCheckinSuccess(`已在 ${stationName} 签到成功！`);
+      const result = await checkin(routeId, stationId);
+      if (result.is_duplicate) {
+        setCheckinSuccess(`今天已在 ${stationName} 签到过啦`);
+      } else {
+        setCheckinSuccess(`已在 ${stationName} 签到成功！`);
+      }
       setTimeout(() => setCheckinSuccess(''), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '签到失败');

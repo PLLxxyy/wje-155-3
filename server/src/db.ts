@@ -94,6 +94,11 @@ function initDatabase(): void {
     );
   `);
 
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ride_history_unique_daily 
+    ON ride_history(user_id, route_id, station_id, date(created_at, 'localtime'));
+  `);
+
   // Seed data
   const existingRoutes = db.prepare('SELECT COUNT(*) as count FROM bus_routes').get() as { count: number };
   if (existingRoutes.count > 0) return;
