@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/adminroute.tsx","./src/components/header.tsx","./src/components/protectedroute.tsx","./src/pages/admin.tsx","./src/pages/busdetail.tsx","./src/pages/login.tsx","./src/pages/profile.tsx","./src/pages/register.tsx","./src/pages/searchpage.tsx"],"version":"5.9.3"}
