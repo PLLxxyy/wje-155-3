@@ -78,6 +78,20 @@ function initDatabase(): void {
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS ride_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      route_id INTEGER NOT NULL,
+      station_id INTEGER NOT NULL,
+      station_name TEXT NOT NULL,
+      route_name TEXT NOT NULL,
+      route_number TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (route_id) REFERENCES bus_routes(id) ON DELETE CASCADE,
+      FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE CASCADE
+    );
   `);
 
   // Seed data

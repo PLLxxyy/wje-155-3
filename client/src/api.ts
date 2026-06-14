@@ -8,6 +8,7 @@ import type {
   User,
   BusRoute,
   RouteStation,
+  RideHistoryItem,
 } from './types';
 
 const BASE = '/api';
@@ -153,4 +154,24 @@ export async function adminAddStation(
 
 export async function adminDeleteStation(stationId: number): Promise<void> {
   await request(`/admin/stations/${stationId}`, { method: 'DELETE' });
+}
+
+// Ride history
+export async function checkin(routeId: number, stationId: number): Promise<RideHistoryItem> {
+  return request<RideHistoryItem>('/ride/checkin', {
+    method: 'POST',
+    body: JSON.stringify({ route_id: routeId, station_id: stationId }),
+  });
+}
+
+export async function getRideHistory(): Promise<RideHistoryItem[]> {
+  return request<RideHistoryItem[]>('/ride/history');
+}
+
+export async function deleteRideHistoryItem(id: number): Promise<void> {
+  await request(`/ride/history/${id}`, { method: 'DELETE' });
+}
+
+export async function clearRideHistory(): Promise<void> {
+  await request('/ride/history', { method: 'DELETE' });
 }

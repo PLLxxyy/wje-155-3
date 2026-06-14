@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRouteDetail, addFavorite, removeFavorite, submitReview, deleteReview } from '../api';
+import { getRouteDetail, addFavorite, removeFavorite, submitReview, deleteReview, checkin } from '../api';
 import { useAuth } from '../App';
 import type { RouteDetailData, BusPosition, Review } from '../types';
 
@@ -66,6 +66,8 @@ export default function BusDetail() {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [checkingInStation, setCheckingInStation] = useState<number | null>(null);
+  const [checkinSuccess, setCheckinSuccess] = useState<string>('');
 
   const routeId = parseInt(id || '0');
 
@@ -128,6 +130,22 @@ export default function BusDetail() {
       setReviews(prev => prev.filter(r => r.id !== reviewId));
     } catch {
       // ignore
+    }
+  }
+
+  async function handleCheckin(stationId: number, stationName: string) {
+    if (!user) { navigate('/login'); return; }
+    setCheckingInStation(stationId);
+    setCheckinSuccess('');
+    setError('');
+    try {
+      await checkin(routeId, stationId);
+      setCheckinSuccess(`已在 ${stationName} 签到成功！`);
+      setTimeout(() => setCheckinSuccess(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '签到失败');
+    } finally {
+      setCheckingInStation(null);
     }
   }
 
@@ -204,19 +222,29 @@ export default function BusDetail() {
       </div>
 
       <div className="card">
-        <div className="card-title">站点列表</div>
+        <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          站点列表
+          {user && <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>点击站点可签到</span>}
+        </div>
+        {checkinSuccess && <div className="alert alert-success" style={{ marginBottom: 12 }}>{checkinSuccess}</div>}
         <div className="stations-timeline">
           {stations.map((station, i) => {
             const isStart = i === 0;
             const isEnd = i === stations.length - 1;
             const hasBus = bus_positions.some(p => p.current_station_index === i);
+            const isCheckingIn = checkingInStation === station.station_id;
             return (
-              <div key={station.id} className="station-item">
+              <div
+                key={station.id}
+                className="station-item"
+                style={{ cursor: user ? 'pointer' : 'default' }}
+                onClick={() => user && handleCheckin(station.station_id, station.station_name)}
+              >
                 <div className="station-dot-wrapper">
                   <div className={`station-dot ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''} ${hasBus ? 'has-bus' : ''}`} />
                   {i < stations.length - 1 && <div className="station-line" />}
                 </div>
-                <div className="station-info">
+                <div className="station-info" style={{ flex: 1 }}>
                   <div className={`station-name ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''}`}>
                     {station.station_name}
                     {isStart && <span className="badge badge-primary" style={{ marginLeft: 8 }}>始发</span>}
@@ -227,6 +255,16 @@ export default function BusDetail() {
                   )}
                   <BusPositionOnTimeline positions={bus_positions} stationIndex={i} stationCount={stations.length} />
                 </div>
+                {user && (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    disabled={isCheckingIn}
+                    onClick={(e) => { e.stopPropagation(); handleCheckin(station.station_id, station.station_name); }}
+                    style={{ marginLeft: 12 }}
+                  >
+                    {isCheckingIn ? '签到中...' : '签到'}
+                  </button>
+                )}
               </div>
             );
           })}

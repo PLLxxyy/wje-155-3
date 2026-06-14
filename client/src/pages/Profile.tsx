@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFavorites, removeFavorite, getSearchHistory, deleteHistoryItem, clearHistory } from '../api';
+import { getFavorites, removeFavorite, getSearchHistory, deleteHistoryItem, clearHistory, getRideHistory, deleteRideHistoryItem, clearRideHistory } from '../api';
 import { useAuth } from '../App';
-import type { FavoriteRouteData, SearchHistoryItem } from '../types';
+import type { FavoriteRouteData, SearchHistoryItem, RideHistoryItem } from '../types';
 
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'favorites' | 'history'>('favorites');
+  const [tab, setTab] = useState<'favorites' | 'history' | 'ride'>('favorites');
   const [favorites, setFavorites] = useState<FavoriteRouteData[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
+  const [rideHistory, setRideHistory] = useState<RideHistoryItem[]>([]);
   const [loadingFav, setLoadingFav] = useState(true);
   const [loadingHis, setLoadingHis] = useState(true);
+  const [loadingRide, setLoadingRide] = useState(true);
 
   useEffect(() => {
     getFavorites()
@@ -22,6 +24,10 @@ export default function Profile() {
       .then(setHistory)
       .catch(() => {})
       .finally(() => setLoadingHis(false));
+    getRideHistory()
+      .then(setRideHistory)
+      .catch(() => {})
+      .finally(() => setLoadingRide(false));
   }, []);
 
   async function handleRemoveFav(routeId: number) {
@@ -51,6 +57,24 @@ export default function Profile() {
     }
   }
 
+  async function handleDeleteRideHistory(id: number) {
+    try {
+      await deleteRideHistoryItem(id);
+      setRideHistory(prev => prev.filter(h => h.id !== id));
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleClearRideHistory() {
+    try {
+      await clearRideHistory();
+      setRideHistory([]);
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div>
       <div className="card" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -72,6 +96,9 @@ export default function Profile() {
       <div className="tabs">
         <button className={`tab ${tab === 'favorites' ? 'active' : ''}`} onClick={() => setTab('favorites')}>
           收藏线路 ({favorites.length})
+        </button>
+        <button className={`tab ${tab === 'ride' ? 'active' : ''}`} onClick={() => setTab('ride')}>
+          乘车历史 ({rideHistory.length})
         </button>
         <button className={`tab ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
           搜索历史 ({history.length})
@@ -155,6 +182,57 @@ export default function Profile() {
                   >
                     删除
                   </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )
+      )}
+
+      {tab === 'ride' && (
+        loadingRide ? (
+          <div className="loading"><div className="spinner" />加载中...</div>
+        ) : rideHistory.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🚌</div>
+            <div className="empty-state-text">暂无乘车记录</div>
+            <button className="btn btn-primary" onClick={() => navigate('/search')} style={{ marginTop: 12 }}>
+              去搜索线路
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 12, textAlign: 'right' }}>
+              <button className="btn btn-sm btn-secondary" onClick={handleClearRideHistory}>
+                清空全部记录
+              </button>
+            </div>
+            {rideHistory.map(ride => (
+              <div
+                key={ride.id}
+                className="route-card"
+                onClick={() => navigate(`/bus/${ride.route_id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="route-header">
+                  <div style={{ flex: 1 }}>
+                    <div className="route-name">
+                      <span className="route-number-badge">{ride.route_number}</span>
+                      {' '}{ride.route_name}
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 13, color: 'var(--gray-600)' }}>
+                      📍 上车站点：<strong>{ride.station_name}</strong>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => { e.stopPropagation(); handleDeleteRideHistory(ride.id); }}
+                  >
+                    删除
+                  </button>
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gray-400)' }}>
+                  乘车时间：{ride.created_at}
                 </div>
               </div>
             ))}

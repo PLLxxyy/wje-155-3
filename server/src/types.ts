@@ -75,6 +75,17 @@ export interface SearchHistory {
   created_at: string;
 }
 
+export interface RideHistory {
+  id: number;
+  user_id: number;
+  route_id: number;
+  station_id: number;
+  station_name: string;
+  route_name: string;
+  route_number: string;
+  created_at: string;
+}
+
 export interface BusPosition {
   id: string;
   current_station_index: number;

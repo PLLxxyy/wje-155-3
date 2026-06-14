@@ -7,6 +7,7 @@ import favoritesRoutes from './routes/favorites';
 import reviewsRoutes from './routes/reviews';
 import userRoutes from './routes/user';
 import adminRoutes from './routes/admin';
+import rideHistoryRoutes from './routes/rideHistory';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3201;
@@ -25,6 +26,7 @@ app.use('/api/favorites', favoritesRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ride', rideHistoryRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -82,6 +82,17 @@ export interface SearchHistoryItem {
   created_at: string;
 }
 
+export interface RideHistoryItem {
+  id: number;
+  user_id: number;
+  route_id: number;
+  station_id: number;
+  station_name: string;
+  route_name: string;
+  route_number: string;
+  created_at: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: User;
